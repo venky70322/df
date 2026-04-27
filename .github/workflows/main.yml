@@ -10,12 +10,10 @@ on:
 
 jobs:
   simulate-and-merge:
-    if: github.actor != 'github-actions[bot]'
     runs-on: self-hosted
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -27,11 +25,11 @@ jobs:
           git config --global user.name github-actions
           git config --global user.email actions@github.com
 
-      - name: Create Temp Branch
-        run: git checkout -b auto-temp
+      - name: Create Temp Branch At Latest Commit
+        run: git branch auto-temp
 
-      - name: Checkout Main
-        run: git checkout main
+      - name: Move Main Back One Commit
+        run: git reset --hard HEAD~1
 
       - name: Merge Temp Branch
         run: |
@@ -39,4 +37,4 @@ jobs:
           -m "Auto merge after CI success"
 
       - name: Push Main
-        run: git push origin main
+        run: git push --force origin main
