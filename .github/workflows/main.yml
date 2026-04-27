@@ -7,11 +7,10 @@ on:
   push:
     branches:
       - main
-      - feature
-      - feature/*
 
 jobs:
   simulate-and-merge:
+    if: github.actor != 'github-actions[bot]'
     runs-on: self-hosted
 
     steps:
@@ -20,35 +19,24 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Show Path
-        run: pwd
-
-      - name: List Files
-        run: ls
-
       - name: Run Simulation
         run: unset VERILATOR_ROOT && make all
 
-      - name: Configure Git User
+      - name: Configure Git
         run: |
           git config --global user.name github-actions
           git config --global user.email actions@github.com
 
-      - name: Fetch Main
-        if: github.ref_name != 'main'
-        run: git fetch origin main
+      - name: Create Temp Branch
+        run: git checkout -b auto-temp
 
       - name: Checkout Main
-        if: github.ref_name != 'main'
         run: git checkout main
 
-      - name: Merge Feature to Main
-        if: github.ref_name != 'main'
+      - name: Merge Temp Branch
         run: |
-          git merge --no-ff "origin/${GITHUB_REF_NAME}" \
-          -m "Merge branch '${GITHUB_REF_NAME}'" \
-          -X theirs --allow-unrelated-histories
+          git merge --no-ff auto-temp \
+          -m "Auto merge after CI success"
 
       - name: Push Main
-        if: github.ref_name != 'main'
         run: git push origin main
